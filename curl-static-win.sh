@@ -547,7 +547,7 @@ compile_trurl() {
 
 curl_config() {
     echo "Configuring curl, Arch: ${ARCH}" | tee "${RELEASE_DIR}/running"
-    local with_openssl_quic with_idn
+    local with_openssl_quic
 
     # --with-openssl-quic and --with-ngtcp2 are mutually exclusive
     with_openssl_quic=""
@@ -556,9 +556,6 @@ curl_config() {
     else
         with_openssl_quic="--with-ngtcp2"
     fi
-
-    # it's possible to use libidn2 instead of winidn
-    with_idn="--without-libidn2 --without-libunistring"
 
     if [ ! -f configure ]; then
         autoreconf -fi;
@@ -574,7 +571,7 @@ curl_config() {
             --enable-static --disable-shared \
             --with-openssl "${with_openssl_quic}" --with-brotli --with-zstd \
             --with-nghttp2 --with-nghttp3 \
-            "${with_idn}" --with-libssh2 \
+            --without-libidn2 --without-libunistring --with-libssh2 \
             --enable-hsts --enable-mime --enable-cookies \
             --enable-http-auth --enable-manual \
             --enable-proxy --enable-file --enable-http \
