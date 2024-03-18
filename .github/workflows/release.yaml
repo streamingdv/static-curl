@@ -24,8 +24,6 @@ jobs:
           NGTCP2_VERSION: ${{ vars.NGTCP2_VERSION }}
           NGHTTP3_VERSION: ${{ vars.NGHTTP3_VERSION }}
           NGHTTP2_VERSION: ${{ vars.NGHTTP2_VERSION }}
-          LIBIDN2_VERSION: ${{ vars.LIBIDN2_VERSION }}
-          LIBUNISTRING_VERSION: ${{ vars.LIBUNISTRING_VERSION }}
           ZLIB_VERSION: ${{ vars.ZLIB_VERSION }}
           BROTLI_VERSION: ${{ vars.BROTLI_VERSION }}
           ZSTD_VERSION: ${{ vars.ZSTD_VERSION }}
@@ -104,8 +102,6 @@ jobs:
           NGTCP2_VERSION: ${{ vars.NGTCP2_VERSION }}
           NGHTTP3_VERSION: ${{ vars.NGHTTP3_VERSION }}
           NGHTTP2_VERSION: ${{ vars.NGHTTP2_VERSION }}
-          LIBIDN2_VERSION: ${{ vars.LIBIDN2_VERSION }}
-          LIBUNISTRING_VERSION: ${{ vars.LIBUNISTRING_VERSION }}
           ZLIB_VERSION: ${{ vars.ZLIB_VERSION }}
           BROTLI_VERSION: ${{ vars.BROTLI_VERSION }}
           ZSTD_VERSION: ${{ vars.ZSTD_VERSION }}
@@ -182,8 +178,6 @@ jobs:
           NGTCP2_VERSION: ${{ vars.NGTCP2_VERSION }}
           NGHTTP3_VERSION: ${{ vars.NGHTTP3_VERSION }}
           NGHTTP2_VERSION: ${{ vars.NGHTTP2_VERSION }}
-          LIBIDN2_VERSION: ${{ vars.LIBIDN2_VERSION }}
-          LIBUNISTRING_VERSION: ${{ vars.LIBUNISTRING_VERSION }}
           ZLIB_VERSION: ${{ vars.ZLIB_VERSION }}
           BROTLI_VERSION: ${{ vars.BROTLI_VERSION }}
           ZSTD_VERSION: ${{ vars.ZSTD_VERSION }}
@@ -262,8 +256,6 @@ jobs:
           NGTCP2_VERSION: ${{ vars.NGTCP2_VERSION }}
           NGHTTP3_VERSION: ${{ vars.NGHTTP3_VERSION }}
           NGHTTP2_VERSION: ${{ vars.NGHTTP2_VERSION }}
-          LIBIDN2_VERSION: ${{ vars.LIBIDN2_VERSION }}
-          LIBUNISTRING_VERSION: ${{ vars.LIBUNISTRING_VERSION }}
           ZLIB_VERSION: ${{ vars.ZLIB_VERSION }}
           BROTLI_VERSION: ${{ vars.BROTLI_VERSION }}
           ZSTD_VERSION: ${{ vars.ZSTD_VERSION }}

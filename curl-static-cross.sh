@@ -21,8 +21,6 @@
 #     -e NGHTTP3_VERSION="" \
 #     -e NGHTTP2_VERSION="" \
 #     -e ZLIB_VERSION="" \
-#     -e LIBUNISTRING_VERSION=1.1 \
-#     -e LIBIDN2_VERSION=2.3.4 \
 #     -e LIBPSL_VERSION="" \
 #     -e BROTLI_VERSION="" \
 #     -e ZSTD_VERSION="" \
@@ -61,8 +59,6 @@ init_env() {
     echo "nghttp3 version: ${NGHTTP3_VERSION}"
     echo "nghttp2 version: ${NGHTTP2_VERSION}"
     echo "zlib version: ${ZLIB_VERSION}"
-    echo "libunistring version: ${LIBUNISTRING_VERSION}"
-    echo "libidn2 version: ${LIBIDN2_VERSION}"
     echo "libpsl version: ${LIBPSL_VERSION}"
     echo "brotli version: ${BROTLI_VERSION}"
     echo "zstd version: ${ZSTD_VERSION}"
@@ -448,44 +444,6 @@ compile_zlib() {
     _copy_license LICENSE zlib;
 }
 
-compile_libunistring() {
-    echo "Compiling libunistring, Arch: ${ARCH}" | tee "${RELEASE_DIR}/running"
-    local url
-    change_dir;
-
-    [ -z "${LIBUNISTRING_VERSION}" ] && LIBUNISTRING_VERSION="latest"
-    url="https://mirrors.kernel.org/gnu/libunistring/libunistring-${LIBUNISTRING_VERSION}.tar.xz"
-    download_and_extract "${url}"
-
-    ./configure --host "${TARGET}" --prefix="${PREFIX}" --disable-rpath --disable-shared;
-    make -j "$(nproc)";
-    make install;
-
-    _copy_license COPYING libunistring;
-}
-
-compile_libidn2() {
-    echo "Compiling libidn2, Arch: ${ARCH}" | tee "${RELEASE_DIR}/running"
-    local url
-    change_dir;
-
-    [ -z "${LIBIDN2_VERSION}" ] && LIBIDN2_VERSION="latest"
-    url="https://mirrors.kernel.org/gnu/libidn/libidn2-${LIBIDN2_VERSION}.tar.gz"
-    download_and_extract "${url}"
-
-    PKG_CONFIG="pkg-config --static --with-path=${PREFIX}/lib/pkgconfig:${PREFIX}/lib64/pkgconfig" \
-    LDFLAGS="${LDFLAGS} --static" \
-    ./configure \
-        --host "${TARGET}" \
-        --with-libunistring-prefix="${PREFIX}" \
-        --prefix="${PREFIX}" \
-        --disable-shared;
-    make -j "$(nproc)";
-    make install;
-
-    _copy_license COPYING libidn2;
-}
-
 compile_libpsl() {
     echo "Compiling libpsl, Arch: ${ARCH}" | tee "${RELEASE_DIR}/running"
     local url
@@ -721,10 +679,12 @@ curl_config() {
             --host="${TARGET}" \
             --prefix="${PREFIX}" \
             --enable-static --disable-shared \
+            --without-libidn2 \
+            --without-libunistring \
             --with-openssl "${with_openssl_quic}" --with-brotli --with-zstd \
             --with-nghttp2 --with-nghttp3 \
-            --with-libidn2 --with-libssh2 \
-            --enable-hsts --enable-mime --enable-cookies \
+            --with-libssh2 --enable-hsts \
+            --enable-mime --enable-cookies \
             --enable-http-auth --enable-manual \
             --enable-proxy --enable-file --enable-http \
             --enable-ftp --enable-telnet --enable-tftp \
@@ -862,8 +822,6 @@ _build_in_docker() {
         -e ZSTD_VERSION="${ZSTD_VERSION}" \
         -e BROTLI_VERSION="${BROTLI_VERSION}" \
         -e LIBSSH2_VERSION="${LIBSSH2_VERSION}" \
-        -e LIBUNISTRING_VERSION="${LIBUNISTRING_VERSION}" \
-        -e LIBIDN2_VERSION="${LIBIDN2_VERSION}" \
         -e ENABLE_TRURL="${ENABLE_TRURL}" \
         -e TRURL_VERSION="${TRURL_VERSION}" \
         -e LIBC="${LIBC}" \
@@ -881,8 +839,6 @@ compile() {
     compile_tls;
     compile_zlib;
     compile_zstd;
-    compile_libunistring;
-    compile_libidn2;
     compile_libpsl;
     compile_ares;
     compile_libssh2;
