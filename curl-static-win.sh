@@ -547,21 +547,15 @@ compile_trurl() {
 
 curl_config() {
     echo "Configuring curl, Arch: ${ARCH}" | tee "${RELEASE_DIR}/running"
-    local with_openssl_quic
+    local with_openssl_quic with_idn
 
-    # --with-openssl-quic and --with-ngtcp2 are mutually exclusive
-    with_openssl_quic=""
-    if [ "${TLS_LIB}" = "openssl" ]; then
-        with_openssl_quic="--with-openssl-quic"
-    else
-        with_openssl_quic="--with-ngtcp2"
-    fi
+    with_openssl_quic="--with-openssl-quic"
+
+    with_idn="--with-winidn"
 
     if [ ! -f configure ]; then
         autoreconf -fi;
     fi
-
-    export CPPFLAGS="-I${PREFIX}/include ${CPPFLAGS}"
 
     CPPFLAGS="-DCURL_STATICLIB -DCARES_STATICLIB -DHAS_ALPN ${CPPFLAGS}"
     CPPFLAGS="-DNGHTTP2_STATICLIB -DNGHTTP3_STATICLIB -DNGTCP2_STATICLIB ${CPPFLAGS}"
@@ -573,7 +567,8 @@ curl_config() {
             --enable-static --disable-shared \
             --with-openssl "${with_openssl_quic}" --with-brotli --with-zstd \
             --with-nghttp2 --with-nghttp3 \
-            --without-libidn2 --without-libunistring --with-libssh2 \
+            --with-libssh2 \
+            --without-libidn2 --without-libunistring \
             --enable-hsts --enable-mime --enable-cookies \
             --enable-http-auth --enable-manual \
             --enable-proxy --enable-file --enable-http \
