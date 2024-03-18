@@ -549,9 +549,13 @@ curl_config() {
     echo "Configuring curl, Arch: ${ARCH}" | tee "${RELEASE_DIR}/running"
     local with_openssl_quic with_idn
 
-    with_openssl_quic="--with-openssl-quic"
-
-    with_idn="--with-winidn"
+    # --with-openssl-quic and --with-ngtcp2 are mutually exclusive
+    with_openssl_quic=""
+    if [ "${TLS_LIB}" = "openssl" ]; then
+        with_openssl_quic="--with-openssl-quic"
+    else
+        with_openssl_quic="--with-ngtcp2"
+    fi
 
     if [ ! -f configure ]; then
         autoreconf -fi;

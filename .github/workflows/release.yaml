@@ -18,8 +18,8 @@ jobs:
       - name: Cross Build Static cURL
         env:
           CURL_VERSION: ${{ vars.CURL_VERSION }}
-          TLS_LIB: ${{ vars.TLS_LIB }}
-          QUICTLS_VERSION: ${{ vars.QUICTLS_VERSION }}
+          TLS_LIB: "openssl"
+          QUICTLS_VERSION: "3.1.5"
           OPENSSL_VERSION: ${{ vars.OPENSSL_VERSION }}
           NGTCP2_VERSION: ${{ vars.NGTCP2_VERSION }}
           NGHTTP3_VERSION: ${{ vars.NGHTTP3_VERSION }}
@@ -96,8 +96,8 @@ jobs:
       - name: Cross Build Static cURL
         env:
           CURL_VERSION: ${{ vars.CURL_VERSION }}
-          TLS_LIB: ${{ vars.TLS_LIB }}
-          QUICTLS_VERSION: ${{ vars.QUICTLS_VERSION }}
+          TLS_LIB: "openssl"
+          QUICTLS_VERSION: "3.1.5"
           OPENSSL_VERSION: ${{ vars.OPENSSL_VERSION }}
           NGTCP2_VERSION: ${{ vars.NGTCP2_VERSION }}
           NGHTTP3_VERSION: ${{ vars.NGHTTP3_VERSION }}
@@ -172,8 +172,8 @@ jobs:
       - name: Cross Build Static cURL
         env:
           CURL_VERSION: ${{ vars.CURL_VERSION }}
-          TLS_LIB: ${{ vars.TLS_LIB }}
-          QUICTLS_VERSION: ${{ vars.QUICTLS_VERSION }}
+          TLS_LIB: "openssl"
+          QUICTLS_VERSION: "3.1.5"
           OPENSSL_VERSION: ${{ vars.OPENSSL_VERSION }}
           NGTCP2_VERSION: ${{ vars.NGTCP2_VERSION }}
           NGHTTP3_VERSION: ${{ vars.NGHTTP3_VERSION }}
@@ -250,8 +250,8 @@ jobs:
       - name: Build Static cURL on macOS
         env:
           CURL_VERSION: ${{ vars.CURL_VERSION }}
-          TLS_LIB: ${{ vars.TLS_LIB }}
-          QUICTLS_VERSION: ${{ vars.QUICTLS_VERSION }}
+          TLS_LIB: "openssl"
+          QUICTLS_VERSION: "3.1.5"
           OPENSSL_VERSION: ${{ vars.OPENSSL_VERSION }}
           NGTCP2_VERSION: ${{ vars.NGTCP2_VERSION }}
           NGHTTP3_VERSION: ${{ vars.NGHTTP3_VERSION }}
@@ -363,7 +363,7 @@ jobs:
 
       - name: Compress and Create Release Note
         env:
-          TLS_LIB: ${{ vars.TLS_LIB }}
+          TLS_LIB: "openssl"
         run: |
           TLS_LIB=${TLS_LIB}
           bash release.sh
