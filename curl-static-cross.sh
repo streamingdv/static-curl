@@ -81,8 +81,6 @@ install_packages_alpine() {
         ca-certificates ca-certificates-bundle \
         cunit-dev \
         zlib-static zlib-dev \
-        libunistring-static libunistring-dev \
-        libidn2-static libidn2-dev \
         libpsl-static libpsl-dev \
         zstd-static zstd-dev;
 }

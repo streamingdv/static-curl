@@ -17,7 +17,7 @@ jobs:
 
       - name: Cross Build Static cURL
         env:
-          CURL_VERSION: ${{ vars.CURL_VERSION }}
+          CURL_VERSION: 8.6.0
           TLS_LIB: "openssl"
           QUICTLS_VERSION: "3.1.5"
           OPENSSL_VERSION: ${{ vars.OPENSSL_VERSION }}
@@ -95,7 +95,7 @@ jobs:
 
       - name: Cross Build Static cURL
         env:
-          CURL_VERSION: ${{ vars.CURL_VERSION }}
+          CURL_VERSION: 8.6.0
           TLS_LIB: "openssl"
           QUICTLS_VERSION: "3.1.5"
           OPENSSL_VERSION: ${{ vars.OPENSSL_VERSION }}
@@ -171,7 +171,7 @@ jobs:
 
       - name: Cross Build Static cURL
         env:
-          CURL_VERSION: ${{ vars.CURL_VERSION }}
+          CURL_VERSION: 8.6.0
           TLS_LIB: "openssl"
           QUICTLS_VERSION: "3.1.5"
           OPENSSL_VERSION: ${{ vars.OPENSSL_VERSION }}
@@ -249,7 +249,7 @@ jobs:
 
       - name: Build Static cURL on macOS
         env:
-          CURL_VERSION: ${{ vars.CURL_VERSION }}
+          CURL_VERSION: 8.6.0
           TLS_LIB: "openssl"
           QUICTLS_VERSION: "3.1.5"
           OPENSSL_VERSION: ${{ vars.OPENSSL_VERSION }}
