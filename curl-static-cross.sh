@@ -726,9 +726,9 @@ compile_curl() {
     if [ "${ARCH}" = "armv7l" ] || [ "${ARCH}" = "armv7" ] || [ "${ARCH}" = "mipsel" ] || [ "${ARCH}" = "mips" ] \
         || [ "${ARCH}" = "powerpc" ] || [ "${ARCH}" = "i686" ]; then
         # add -Wno-cast-align to avoid error alignment from 4 to 8
-        make -j "$(nproc)" LDFLAGS="-static -all-static -Wl,-s ${LDFLAGS}" CFLAGS="-Wno-cast-align ${CFLAGS}";
+        make -j "$(nproc)" LDFLAGS="-static -all-static -Wl,-s ${LDFLAGS}" CFLAGS="-Wno-cast-align -Wno-deprecated-declarations ${CFLAGS}";
     else
-        make -j "$(nproc)" LDFLAGS="-static -all-static -Wl,-s ${LDFLAGS}";
+        make -j "$(nproc)" LDFLAGS="-static -all-static -Wl,-s ${LDFLAGS}" CFLAGS="-Wno-deprecated-declarations ${CFLAGS}";
     fi
 
     _copy_license COPYING curl;
