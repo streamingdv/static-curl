@@ -49,7 +49,7 @@ init_env() {
 }
 
 install_packages() {
-    brew install automake autoconf libtool binutils pkg-config coreutils cmake make llvm \
+    brew install --quiet automake autoconf libtool binutils pkg-config coreutils homebrew/core/cmake make llvm \
          curl wget git jq xz ripgrep gnu-sed gawk groff gnupg pcre2 cunit ca-certificates;
 }
 
@@ -316,6 +316,7 @@ compile_tls() {
         ${OPENSSL_ARCH} \
         -fPIC \
         --prefix="${PREFIX}" \
+        --openssldir=/etc/ssl \
         threads no-shared \
         enable-ktls \
         enable-ec_nistp_64_gcc_128 \
@@ -499,8 +500,8 @@ curl_config() {
             --with-ca-fallback --enable-ares \
             --disable-ldap --disable-ldaps --disable-rtsp \
             --disable-rtmp --disable-rtmps "${ENABLE_DEBUG}" \
-            CFLAGS="-I${PREFIX}/include" \
-            CPPFLAGS="-I${PREFIX}/include";
+            CFLAGS="-Wno-deprecated-declarations -I${PREFIX}/include" \
+            CPPFLAGS="-Wno-deprecated-declarations -I${PREFIX}/include";
 }
 
 compile_curl() {
