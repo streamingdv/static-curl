@@ -3,62 +3,91 @@ name: build-and-release
 on:
   # run it manually
   workflow_dispatch:
+    inputs:
+      CURL_VERSION:
+        description: 'cURL Version'
+        required: false
+        default: ''
+        type: string
+      TLS_LIB:
+        description: 'TLS Library (only openssl is supported for now)'
+        required: false
+        default: 'openssl'
+        type: string
+      OPENSSL_VERSION:
+        description: 'OpenSSL Version'
+        required: false
+        default: ''
+        type: string
+      OPENSSL_BRANCH:
+        description: 'OpenSSL Branch'
+        required: false
+        default: ''
+        type: string
+      ARCHES_LINUX_GLIBC:
+        description: "Linux glibc Architecture List (set 'none' to skip)"
+        required: false
+        default: 'x86_64 aarch64 armv7 armv5 riscv64 s390x mips64 mips64el mips mipsel powerpc64le powerpc i686 loongarch64'
+        type: string
+      ARCHES_LINUX_MUSL:
+        description: "Linux musl Architecture List (set 'none' to skip)"
+        required: false
+        default: 'x86_64 aarch64 armv7 armv5 riscv64 s390x mips64 mips64el mips mipsel powerpc64le powerpc i686 loongarch64'
+        type: string
+      ARCHES_WINDOWS:
+        description: "Windows Architecture List (set 'none' to skip)"
+        required: false
+        default: 'x86_64 aarch64 armv7 i686'
+        type: string
+      ARCHES_MACOS:
+        description: "macOS Architecture List (set 'none' to skip)"
+        required: false
+        default: 'x86_64 arm64'
+        type: string
+
+# Pinned here rather than in repository variables so a checkout of this branch always builds the
+# same curl. A workflow_dispatch input still overrides it for one-off builds.
+env:
+  CURL_VERSION: '8.21.0'
+  TLS_LIB: 'openssl'
 
 jobs:
   build-Linux:
     name: build-Linux (${{ github.ref_name }})
+    if: inputs.ARCHES_LINUX_GLIBC != 'none'
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 1
 
-      - name: Cross Build Static cURL
-        env:
-          CURL_VERSION: 8.6.0
-          TLS_LIB: "openssl"
-          QUICTLS_VERSION: "3.1.5"
-          OPENSSL_VERSION: ${{ vars.OPENSSL_VERSION }}
-          NGTCP2_VERSION: ${{ vars.NGTCP2_VERSION }}
-          NGHTTP3_VERSION: ${{ vars.NGHTTP3_VERSION }}
-          NGHTTP2_VERSION: ${{ vars.NGHTTP2_VERSION }}
-          ZLIB_VERSION: ${{ vars.ZLIB_VERSION }}
-          BROTLI_VERSION: ${{ vars.BROTLI_VERSION }}
-          ZSTD_VERSION: ${{ vars.ZSTD_VERSION }}
-          LIBSSH2_VERSION: ${{ vars.LIBSSH2_VERSION }}
-          ARES_VERSION: ${{ vars.ARES_VERSION }}
-          ENABLE_TRURL: ${{ vars.ENABLE_TRURL }}
-          TRURL_VERSION: ${{ vars.TRURL_VERSION }}
-          LIBC: glibc
-          STATIC_LIBRARY: 1
-          CONTAINER_IMAGE: debian:latest
-          TOKEN_READ: ${{ secrets.GITHUB_TOKEN }}
-          ARCHES: "x86_64 aarch64 armv7 riscv64 s390x mips64 mips64el mipsel powerpc64le powerpc"
+      - name: Set build variables
         run: |
-          ARCHES="${ARCHES}"
-          CURL_VERSION=${CURL_VERSION}
-          TLS_LIB=${TLS_LIB}
-          QUICTLS_VERSION=${QUICTLS_VERSION}
-          OPENSSL_VERSION=${OPENSSL_VERSION}
-          NGTCP2_VERSION=${NGTCP2_VERSION}
-          NGHTTP3_VERSION=${NGHTTP3_VERSION}
-          NGHTTP2_VERSION=${NGHTTP2_VERSION}
-          LIBIDN2_VERSION=${LIBIDN2_VERSION}
-          LIBUNISTRING_VERSION=${LIBUNISTRING_VERSION}
-          ZLIB_VERSION=${ZLIB_VERSION}
-          BROTLI_VERSION=${BROTLI_VERSION}
-          ZSTD_VERSION=${ZSTD_VERSION}
-          LIBSSH2_VERSION=${LIBSSH2_VERSION}
-          ARES_VERSION=${ARES_VERSION}
-          ENABLE_TRURL=${ENABLE_TRURL}
-          TRURL_VERSION=${TRURL_VERSION}
-          LIBC=${LIBC}
-          STATIC_LIBRARY=${STATIC_LIBRARY}
-          CONTAINER_IMAGE=${CONTAINER_IMAGE}
-          TOKEN_READ=${TOKEN_READ}
-          sh curl-static-cross.sh
+          # Set all build variables with fallback logic
+          echo "ARCHES=${{ inputs.ARCHES_LINUX_GLIBC != '' && inputs.ARCHES_LINUX_GLIBC || vars.ARCHES_LINUX_GLIBC }}" >> $GITHUB_ENV
+          echo "CURL_VERSION=${{ inputs.CURL_VERSION != '' && inputs.CURL_VERSION || env.CURL_VERSION }}" >> $GITHUB_ENV
+          echo "TLS_LIB=${{ inputs.TLS_LIB != '' && inputs.TLS_LIB || env.TLS_LIB }}" >> $GITHUB_ENV
+          echo "OPENSSL_VERSION=${{ inputs.OPENSSL_VERSION != '' && inputs.OPENSSL_VERSION || vars.OPENSSL_VERSION }}" >> $GITHUB_ENV
+          echo "OPENSSL_BRANCH=${{ inputs.OPENSSL_BRANCH != '' && inputs.OPENSSL_BRANCH || vars.OPENSSL_BRANCH }}" >> $GITHUB_ENV
+          echo "NGTCP2_VERSION=${{ vars.NGTCP2_VERSION }}" >> $GITHUB_ENV
+          echo "NGHTTP3_VERSION=${{ vars.NGHTTP3_VERSION }}" >> $GITHUB_ENV
+          echo "NGHTTP2_VERSION=${{ vars.NGHTTP2_VERSION }}" >> $GITHUB_ENV
+          echo "ZLIB_VERSION=${{ vars.ZLIB_VERSION }}" >> $GITHUB_ENV
+          echo "BROTLI_VERSION=${{ vars.BROTLI_VERSION }}" >> $GITHUB_ENV
+          echo "ZSTD_VERSION=${{ vars.ZSTD_VERSION }}" >> $GITHUB_ENV
+          echo "LIBSSH2_VERSION=${{ vars.LIBSSH2_VERSION }}" >> $GITHUB_ENV
+          echo "ARES_VERSION=${{ vars.ARES_VERSION }}" >> $GITHUB_ENV
+          echo "ENABLE_TRURL=${{ vars.ENABLE_TRURL_GLIBC }}" >> $GITHUB_ENV
+          echo "TRURL_VERSION=${{ vars.TRURL_VERSION }}" >> $GITHUB_ENV
+          echo "LIBC=glibc" >> $GITHUB_ENV
+          echo "QBT_MUSL_CROSS_MAKE_VERSION=${{ vars.QBT_MUSL_CROSS_MAKE_VERSION }}" >> $GITHUB_ENV
+          echo "CONTAINER_IMAGE=debian:latest" >> $GITHUB_ENV
+          echo "TOKEN_READ=${{ secrets.GITHUB_TOKEN }}" >> $GITHUB_ENV
+
+      - name: Cross Build Static cURL
+        run: sh curl-static-cross.sh
 
       - name: Set up environment
         run: |
@@ -66,7 +95,7 @@ jobs:
           echo "VERSION=$VERSION" >> $GITHUB_ENV
 
       - name: Upload artifact (version)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: curl-version
           path: release/version.txt
@@ -75,7 +104,7 @@ jobs:
           overwrite: true
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: curl-binary-linux-${{ env.VERSION }}
           path: release
@@ -85,56 +114,41 @@ jobs:
 
   build-Linux-musl:
     name: build-Linux-musl (${{ github.ref_name }})
+    if: inputs.ARCHES_LINUX_MUSL != 'none'
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 1
 
-      - name: Cross Build Static cURL
-        env:
-          CURL_VERSION: 8.6.0
-          TLS_LIB: "openssl"
-          QUICTLS_VERSION: "3.1.5"
-          OPENSSL_VERSION: ${{ vars.OPENSSL_VERSION }}
-          NGTCP2_VERSION: ${{ vars.NGTCP2_VERSION }}
-          NGHTTP3_VERSION: ${{ vars.NGHTTP3_VERSION }}
-          NGHTTP2_VERSION: ${{ vars.NGHTTP2_VERSION }}
-          ZLIB_VERSION: ${{ vars.ZLIB_VERSION }}
-          BROTLI_VERSION: ${{ vars.BROTLI_VERSION }}
-          ZSTD_VERSION: ${{ vars.ZSTD_VERSION }}
-          LIBSSH2_VERSION: ${{ vars.LIBSSH2_VERSION }}
-          ARES_VERSION: ${{ vars.ARES_VERSION }}
-          ENABLE_TRURL: ${{ vars.ENABLE_TRURL }}
-          TRURL_VERSION: ${{ vars.TRURL_VERSION }}
-          LIBC: musl
-          CONTAINER_IMAGE: debian:latest
-          TOKEN_READ: ${{ secrets.GITHUB_TOKEN }}
-          ARCHES: "x86_64 aarch64 armv7 i686 riscv64 s390x mips64 mips64el mips mipsel powerpc64le powerpc"
+      - name: Set build variables
         run: |
-          ARCHES="${ARCHES}"
-          CURL_VERSION=${CURL_VERSION}
-          TLS_LIB=${TLS_LIB}
-          QUICTLS_VERSION=${QUICTLS_VERSION}
-          OPENSSL_VERSION=${OPENSSL_VERSION}
-          NGTCP2_VERSION=${NGTCP2_VERSION}
-          NGHTTP3_VERSION=${NGHTTP3_VERSION}
-          NGHTTP2_VERSION=${NGHTTP2_VERSION}
-          LIBIDN2_VERSION=${LIBIDN2_VERSION}
-          LIBUNISTRING_VERSION=${LIBUNISTRING_VERSION}
-          ZLIB_VERSION=${ZLIB_VERSION}
-          BROTLI_VERSION=${BROTLI_VERSION}
-          ZSTD_VERSION=${ZSTD_VERSION}
-          LIBSSH2_VERSION=${LIBSSH2_VERSION}
-          ARES_VERSION=${ARES_VERSION}
-          ENABLE_TRURL=${ENABLE_TRURL}
-          TRURL_VERSION=${TRURL_VERSION}
-          LIBC=${LIBC}
-          CONTAINER_IMAGE=${CONTAINER_IMAGE}
-          TOKEN_READ=${TOKEN_READ}
-          sh curl-static-cross.sh
+          # Set all build variables with fallback logic
+          echo "ARCHES=${{ inputs.ARCHES_LINUX_MUSL != '' && inputs.ARCHES_LINUX_MUSL || vars.ARCHES_LINUX_MUSL }}" >> $GITHUB_ENV
+          echo "CURL_VERSION=${{ inputs.CURL_VERSION != '' && inputs.CURL_VERSION || env.CURL_VERSION }}" >> $GITHUB_ENV
+          echo "TLS_LIB=${{ inputs.TLS_LIB != '' && inputs.TLS_LIB || env.TLS_LIB }}" >> $GITHUB_ENV
+          echo "OPENSSL_VERSION=${{ inputs.OPENSSL_VERSION != '' && inputs.OPENSSL_VERSION || vars.OPENSSL_VERSION }}" >> $GITHUB_ENV
+          echo "OPENSSL_BRANCH=${{ inputs.OPENSSL_BRANCH != '' && inputs.OPENSSL_BRANCH || vars.OPENSSL_BRANCH }}" >> $GITHUB_ENV
+          echo "NGTCP2_VERSION=${{ vars.NGTCP2_VERSION }}" >> $GITHUB_ENV
+          echo "NGHTTP3_VERSION=${{ vars.NGHTTP3_VERSION }}" >> $GITHUB_ENV
+          echo "NGHTTP2_VERSION=${{ vars.NGHTTP2_VERSION }}" >> $GITHUB_ENV
+          echo "ZLIB_VERSION=${{ vars.ZLIB_VERSION }}" >> $GITHUB_ENV
+          echo "BROTLI_VERSION=${{ vars.BROTLI_VERSION }}" >> $GITHUB_ENV
+          echo "ZSTD_VERSION=${{ vars.ZSTD_VERSION }}" >> $GITHUB_ENV
+          echo "LIBSSH2_VERSION=${{ vars.LIBSSH2_VERSION }}" >> $GITHUB_ENV
+          echo "ARES_VERSION=${{ vars.ARES_VERSION }}" >> $GITHUB_ENV
+          echo "ENABLE_TRURL=${{ vars.ENABLE_TRURL_MUSL }}" >> $GITHUB_ENV
+          echo "TRURL_VERSION=${{ vars.TRURL_VERSION }}" >> $GITHUB_ENV
+          echo "LIBC=musl" >> $GITHUB_ENV
+          echo "QBT_MUSL_CROSS_MAKE_VERSION=${{ vars.QBT_MUSL_CROSS_MAKE_VERSION }}" >> $GITHUB_ENV
+          echo "STATIC_LIBRARY=1" >> $GITHUB_ENV
+          echo "CONTAINER_IMAGE=debian:latest" >> $GITHUB_ENV
+          echo "TOKEN_READ=${{ secrets.GITHUB_TOKEN }}" >> $GITHUB_ENV
+
+      - name: Cross Build Static cURL
+        run: sh curl-static-cross.sh
 
       - name: Set up environment
         run: |
@@ -142,7 +156,7 @@ jobs:
           echo "VERSION=$VERSION" >> $GITHUB_ENV
 
       - name: Upload artifact (version)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: curl-version
           path: release/version.txt
@@ -151,7 +165,7 @@ jobs:
           overwrite: true
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: curl-binary-linux-musl-${{ env.VERSION }}
           path: release
@@ -161,54 +175,38 @@ jobs:
 
   build-Windows:
     name: build-Windows (${{ github.ref_name }})
+    if: inputs.ARCHES_WINDOWS != 'none'
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 1
 
-      - name: Cross Build Static cURL
-        env:
-          CURL_VERSION: 8.6.0
-          TLS_LIB: "openssl"
-          QUICTLS_VERSION: "3.1.5"
-          OPENSSL_VERSION: ${{ vars.OPENSSL_VERSION }}
-          NGTCP2_VERSION: ${{ vars.NGTCP2_VERSION }}
-          NGHTTP3_VERSION: ${{ vars.NGHTTP3_VERSION }}
-          NGHTTP2_VERSION: ${{ vars.NGHTTP2_VERSION }}
-          ZLIB_VERSION: ${{ vars.ZLIB_VERSION }}
-          BROTLI_VERSION: ${{ vars.BROTLI_VERSION }}
-          ZSTD_VERSION: ${{ vars.ZSTD_VERSION }}
-          LIBSSH2_VERSION: ${{ vars.LIBSSH2_VERSION }}
-          ARES_VERSION: ${{ vars.ARES_VERSION }}
-          ENABLE_TRURL: ${{ vars.ENABLE_TRURL }}
-          TRURL_VERSION: ${{ vars.TRURL_VERSION }}
-          CONTAINER_IMAGE: mstorsjo/llvm-mingw:latest
-          TOKEN_READ: ${{ secrets.GITHUB_TOKEN }}
-          ARCHES: "x86_64 aarch64 armv7 i686"
+      - name: Set build variables
         run: |
-          ARCHES="${ARCHES}"
-          CURL_VERSION=${CURL_VERSION}
-          TLS_LIB=${TLS_LIB}
-          QUICTLS_VERSION=${QUICTLS_VERSION}
-          OPENSSL_VERSION=${OPENSSL_VERSION}
-          NGTCP2_VERSION=${NGTCP2_VERSION}
-          NGHTTP3_VERSION=${NGHTTP3_VERSION}
-          NGHTTP2_VERSION=${NGHTTP2_VERSION}
-          LIBIDN2_VERSION=${LIBIDN2_VERSION}
-          LIBUNISTRING_VERSION=${LIBUNISTRING_VERSION}
-          ZLIB_VERSION=${ZLIB_VERSION}
-          BROTLI_VERSION=${BROTLI_VERSION}
-          ZSTD_VERSION=${ZSTD_VERSION}
-          LIBSSH2_VERSION=${LIBSSH2_VERSION}
-          ARES_VERSION=${ARES_VERSION}
-          ENABLE_TRURL=${ENABLE_TRURL}
-          TRURL_VERSION=${TRURL_VERSION}
-          CONTAINER_IMAGE=${CONTAINER_IMAGE}
-          TOKEN_READ=${TOKEN_READ}
-          sh curl-static-win.sh
+          # Set all build variables with fallback logic
+          echo "ARCHES=${{ inputs.ARCHES_WINDOWS != '' && inputs.ARCHES_WINDOWS || vars.ARCHES_WINDOWS }}" >> $GITHUB_ENV
+          echo "CURL_VERSION=${{ inputs.CURL_VERSION != '' && inputs.CURL_VERSION || env.CURL_VERSION }}" >> $GITHUB_ENV
+          echo "TLS_LIB=${{ inputs.TLS_LIB != '' && inputs.TLS_LIB || env.TLS_LIB }}" >> $GITHUB_ENV
+          echo "OPENSSL_VERSION=${{ inputs.OPENSSL_VERSION != '' && inputs.OPENSSL_VERSION || vars.OPENSSL_VERSION }}" >> $GITHUB_ENV
+          echo "OPENSSL_BRANCH=${{ inputs.OPENSSL_BRANCH != '' && inputs.OPENSSL_BRANCH || vars.OPENSSL_BRANCH }}" >> $GITHUB_ENV
+          echo "NGTCP2_VERSION=${{ vars.NGTCP2_VERSION }}" >> $GITHUB_ENV
+          echo "NGHTTP3_VERSION=${{ vars.NGHTTP3_VERSION }}" >> $GITHUB_ENV
+          echo "NGHTTP2_VERSION=${{ vars.NGHTTP2_VERSION }}" >> $GITHUB_ENV
+          echo "ZLIB_VERSION=${{ vars.ZLIB_VERSION }}" >> $GITHUB_ENV
+          echo "BROTLI_VERSION=${{ vars.BROTLI_VERSION }}" >> $GITHUB_ENV
+          echo "ZSTD_VERSION=${{ vars.ZSTD_VERSION }}" >> $GITHUB_ENV
+          echo "LIBSSH2_VERSION=${{ vars.LIBSSH2_VERSION }}" >> $GITHUB_ENV
+          echo "ARES_VERSION=${{ vars.ARES_VERSION }}" >> $GITHUB_ENV
+          echo "ENABLE_TRURL=${{ vars.ENABLE_TRURL_WINDOWS }}" >> $GITHUB_ENV
+          echo "TRURL_VERSION=${{ vars.TRURL_VERSION }}" >> $GITHUB_ENV
+          echo "CONTAINER_IMAGE=mstorsjo/llvm-mingw:latest" >> $GITHUB_ENV
+          echo "TOKEN_READ=${{ secrets.GITHUB_TOKEN }}" >> $GITHUB_ENV
+
+      - name: Cross Build Static cURL
+        run: sh curl-static-win.sh
 
       - name: Set up environment
         run: |
@@ -216,7 +214,7 @@ jobs:
           echo "VERSION=$VERSION" >> $GITHUB_ENV
 
       - name: Upload artifact (version)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: curl-version
           path: release/version.txt
@@ -225,7 +223,7 @@ jobs:
           overwrite: true
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: curl-binary-windows-${{ env.VERSION }}
           path: release
@@ -235,6 +233,7 @@ jobs:
 
   build-macOS:
     name: build-macOS (${{ github.ref_name }})
+    if: inputs.ARCHES_MACOS != 'none'
     runs-on: macos-latest
 
     steps:
@@ -243,44 +242,32 @@ jobs:
           echo "MACOS_RELEASE_DIR=${HOME}" >> $GITHUB_ENV
 
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 1
 
-      - name: Build Static cURL on macOS
-        env:
-          CURL_VERSION: 8.6.0
-          TLS_LIB: "openssl"
-          QUICTLS_VERSION: "3.1.5"
-          OPENSSL_VERSION: ${{ vars.OPENSSL_VERSION }}
-          NGTCP2_VERSION: ${{ vars.NGTCP2_VERSION }}
-          NGHTTP3_VERSION: ${{ vars.NGHTTP3_VERSION }}
-          NGHTTP2_VERSION: ${{ vars.NGHTTP2_VERSION }}
-          ZLIB_VERSION: ${{ vars.ZLIB_VERSION }}
-          BROTLI_VERSION: ${{ vars.BROTLI_VERSION }}
-          ZSTD_VERSION: ${{ vars.ZSTD_VERSION }}
-          LIBSSH2_VERSION: ${{ vars.LIBSSH2_VERSION }}
-          ARES_VERSION: ${{ vars.ARES_VERSION }}
-          TOKEN_READ: ${{ secrets.GITHUB_TOKEN }}
-          ARCHES: "x86_64 arm64"
+      - name: Set build variables
         run: |
-          ARCHES="${ARCHES}"
-          CURL_VERSION=${CURL_VERSION}
-          TLS_LIB=${TLS_LIB}
-          QUICTLS_VERSION=${QUICTLS_VERSION}
-          OPENSSL_VERSION=${OPENSSL_VERSION}
-          NGTCP2_VERSION=${NGTCP2_VERSION}
-          NGHTTP3_VERSION=${NGHTTP3_VERSION}
-          NGHTTP2_VERSION=${NGHTTP2_VERSION}
-          LIBIDN2_VERSION=${LIBIDN2_VERSION}
-          LIBUNISTRING_VERSION=${LIBUNISTRING_VERSION}
-          ZLIB_VERSION=${ZLIB_VERSION}
-          BROTLI_VERSION=${BROTLI_VERSION}
-          ZSTD_VERSION=${ZSTD_VERSION}
-          LIBSSH2_VERSION=${LIBSSH2_VERSION}
-          ARES_VERSION=${ARES_VERSION}
-          TOKEN_READ=${TOKEN_READ}
-          bash curl-static-mac.sh
+          # Set all build variables with fallback logic
+          echo "ARCHES=${{ inputs.ARCHES_MACOS != '' && inputs.ARCHES_MACOS || vars.ARCHES_MACOS }}" >> $GITHUB_ENV
+          echo "CURL_VERSION=${{ inputs.CURL_VERSION != '' && inputs.CURL_VERSION || env.CURL_VERSION }}" >> $GITHUB_ENV
+          echo "TLS_LIB=${{ inputs.TLS_LIB != '' && inputs.TLS_LIB || env.TLS_LIB }}" >> $GITHUB_ENV
+          echo "OPENSSL_VERSION=${{ inputs.OPENSSL_VERSION != '' && inputs.OPENSSL_VERSION || vars.OPENSSL_VERSION }}" >> $GITHUB_ENV
+          echo "OPENSSL_BRANCH=${{ inputs.OPENSSL_BRANCH != '' && inputs.OPENSSL_BRANCH || vars.OPENSSL_BRANCH }}" >> $GITHUB_ENV
+          echo "NGTCP2_VERSION=${{ vars.NGTCP2_VERSION }}" >> $GITHUB_ENV
+          echo "NGHTTP3_VERSION=${{ vars.NGHTTP3_VERSION }}" >> $GITHUB_ENV
+          echo "NGHTTP2_VERSION=${{ vars.NGHTTP2_VERSION }}" >> $GITHUB_ENV
+          echo "ZLIB_VERSION=${{ vars.ZLIB_VERSION }}" >> $GITHUB_ENV
+          echo "BROTLI_VERSION=${{ vars.BROTLI_VERSION }}" >> $GITHUB_ENV
+          echo "ZSTD_VERSION=${{ vars.ZSTD_VERSION }}" >> $GITHUB_ENV
+          echo "LIBSSH2_VERSION=${{ vars.LIBSSH2_VERSION }}" >> $GITHUB_ENV
+          echo "ARES_VERSION=${{ vars.ARES_VERSION }}" >> $GITHUB_ENV
+          echo "ENABLE_TRURL=${{ vars.ENABLE_TRURL_MACOS }}" >> $GITHUB_ENV
+          echo "TRURL_VERSION=${{ vars.TRURL_VERSION }}" >> $GITHUB_ENV
+          echo "TOKEN_READ=${{ secrets.GITHUB_TOKEN }}" >> $GITHUB_ENV
+
+      - name: Build Static cURL on macOS
+        run: bash curl-static-mac.sh
 
       - name: Set up environment
         run: |
@@ -288,7 +275,7 @@ jobs:
           echo "VERSION=$VERSION" >> $GITHUB_ENV
 
       - name: Upload artifact (version)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: curl-version
           path: ${{ env.MACOS_RELEASE_DIR }}/version.txt
@@ -297,7 +284,7 @@ jobs:
           overwrite: true
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: curl-binary-macos-${{ env.VERSION }}
           path: ${{ env.MACOS_RELEASE_DIR }}/release
@@ -308,16 +295,22 @@ jobs:
   release:
     name: release curl (${{ github.ref_name }})
     needs: [build-Linux, build-Linux-musl, build-Windows, build-macOS]
+    if: >-
+      !cancelled() && !failure() &&
+      (needs.build-Linux.result == 'success' ||
+       needs.build-Linux-musl.result == 'success' ||
+       needs.build-Windows.result == 'success' ||
+       needs.build-macOS.result == 'success')
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 1
 
       - name: Download artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: curl-version
           path: curl-version
@@ -327,26 +320,36 @@ jobs:
           VERSION=`cat  curl-version/version.txt`
           echo "VERSION=$VERSION" >> $GITHUB_ENV
 
+      - name: Set RELEASE_TAG
+        run: |
+          RELEASE_TAG="${{ env.VERSION }}"
+          echo "RELEASE_TAG=$RELEASE_TAG" >> $GITHUB_ENV
+          echo "Will release as: $RELEASE_TAG"
+
       - name: Download artifact (linux)
-        uses: actions/download-artifact@v4
+        if: needs.build-Linux.result == 'success'
+        uses: actions/download-artifact@v8
         with:
           name: curl-binary-linux-${{ env.VERSION }}
           path: release
 
       - name: Download artifact (linux-musl)
-        uses: actions/download-artifact@v4
+        if: needs.build-Linux-musl.result == 'success'
+        uses: actions/download-artifact@v8
         with:
           name: curl-binary-linux-musl-${{ env.VERSION }}
           path: release
 
       - name: Download artifact (macos)
-        uses: actions/download-artifact@v4
+        if: needs.build-macOS.result == 'success'
+        uses: actions/download-artifact@v8
         with:
           name: curl-binary-macos-${{ env.VERSION }}
           path: release
 
       - name: Download artifact (windows)
-        uses: actions/download-artifact@v4
+        if: needs.build-Windows.result == 'success'
+        uses: actions/download-artifact@v8
         with:
           name: curl-binary-windows-${{ env.VERSION }}
           path: release
@@ -357,35 +360,39 @@ jobs:
           echo
           file release/bin/curl-*
           echo
-          cat release/version-info.txt
+          cat release/version-info.txt 2>/dev/null || true
           echo
           sha256sum release/bin/curl-*
 
       - name: Compress and Create Release Note
         env:
-          TLS_LIB: "openssl"
+          TLS_LIB: ${{ inputs.TLS_LIB != '' && inputs.TLS_LIB || env.TLS_LIB }}
+          CURL_VERSION: ${{ env.VERSION }}
+          RELEASE_TAG: ${{ env.RELEASE_TAG }}
+          WORKFLOW_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
-          TLS_LIB=${TLS_LIB}
           bash release.sh
 
       - name: List compressed files
         run: ls -l release/*
 
       - name: Upload Release Asset
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v3
         if: github.ref == 'refs/heads/main'
         with:
           files: |
             release/bin/curl-*.tar.xz
             release/curl-*.tar.xz
           body_path: release/release.md
-          tag_name: ${{ env.VERSION }}
+          tag_name: ${{ env.RELEASE_TAG }}
+          name: Release ${{ env.RELEASE_TAG }}
+          make_latest: ${{ env.RELEASE_TAG == env.VERSION }}
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
-          name: curl-release-${{ env.VERSION }}
+          name: curl-release-${{ env.RELEASE_TAG }}
           path: release
           retention-days: 90
           if-no-files-found: error

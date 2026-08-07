@@ -1,0 +1,6 @@
+.idea/
+*.iml
+
+# Build output produced by the curl-static-* scripts
+release/
+*.log

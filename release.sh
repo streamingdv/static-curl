@@ -2,10 +2,11 @@
 
 init_env() {
     current_dir=$(dirname "$(realpath "$0")")
-    export RELEASE_DIR=${current_dir};
+    export RELEASE_DIR="${current_dir}";
     cd "${RELEASE_DIR}" || exit
-    CURL_VERSION=$(head -n 1 release/version.txt)
-    export CURL_VERSION=${CURL_VERSION}
+    CURL_VERSION="${CURL_VERSION:-$(head -n 1 release/version.txt)}"
+    export CURL_VERSION="${CURL_VERSION}"
+    export RELEASE_TAG="${RELEASE_TAG:-${CURL_VERSION}}"
 }
 
 create_release_note() {
@@ -13,16 +14,12 @@ create_release_note() {
     local components protocols features output_sha256 markdown_table
     echo "Creating release note..."
 
-    if [ "${TLS_LIB}" = "quictls" ]; then
-        components=$(head -n 1 release/version-info.txt | sed 's#OpenSSL/#quictls/#g' | sed 's/ /\n/g' | grep '/' | sed 's#^#- #g' || true)
-    else
-        components=$(head -n 1 release/version-info.txt | sed 's/ /\n/g' | grep '/' | sed 's#^#- #g' || true)
-    fi
-    protocols=$(grep Protocols release/version-info.txt | cut -d":" -f2 | sed -e 's/^[[:space:]]*//')
-    features=$(grep Features release/version-info.txt | cut -d":" -f2 | sed -e 's/^[[:space:]]*//')
+    components=$(head -n 1 release/version-info.txt | sed 's/ /\n/g' | grep '/' | sed 's#^#- #g' || true)
+    protocols=$(grep Protocols release/version-info.txt | cut -d":" -f2 | sed -e 's/^[[:space:]]*//' || true)
+    features=$(grep Features release/version-info.txt | cut -d":" -f2 | sed -e 's/^[[:space:]]*//' || true)
 
     echo "Creating checksum..."
-    output_sha256=$(sha256sum release/bin/curl-linux* release/bin/curl-macos* release/bin/curl-windows* \
+    output_sha256=$(sha256sum release/bin/curl-linux* release/bin/curl-macos* release/bin/curl-windows* 2>/dev/null \
         | sed 's#release/bin/##g' | sed 's#-# #g' | sed 's#.exe##g')
     markdown_table=$(printf "%s" "${output_sha256}" |
         awk 'BEGIN {print "| File | Platform | Arch | LibC | SHA256 |\n|------|------|------|--------|--------|"}
@@ -45,45 +42,73 @@ ${features}
 
 ## License
 
-This binary includes various open-source software such as curl, openssl, zlib, brotli, zstd, libidn2, libssh2, nghttp2, ngtcp2, nghttp3. Their license information has been compiled and is included in the dev package.
+This binary includes various open-source software such as curl, openssl, zlib, brotli, zstd, libpsl, libssh2, nghttp2, ngtcp2, nghttp3. Their license information has been compiled and is included in the dev package. libidn2 and libunistring are deliberately not linked in, so no LGPL component is bundled; IDN support on Windows comes from the operating system through winidn.
 
-## Checksums
+## Build Info
+
+${WORKFLOW_URL:+Built by [GitHub Actions](${WORKFLOW_URL})}
+
+### Checksums
+<details>
+<summary>Checksums of binaries</summary>
 
 ${markdown_table}
+
+</details>
 
 EOF
 }
 
 tar_curl() {
     cd "${RELEASE_DIR}/release/bin" || exit
-    chmod +x curl-[lmw]* trurl-*;
+    chmod +x curl-[lmw]* trurl-* 2>/dev/null || true;
 
     for file in curl-linux-* curl-macos-*; do
+        [ -f "${file}" ] || continue;
         mv "${file}" curl;
-        trurl_filename=$(echo "${file}" | sed 's#curl-#trurl-#g')
+        sha256sum curl > SHA256SUMS;
+        trurl_filename=$(echo "${file}" | sed 's#curl-#trurl-#g');
         if [ -f "${trurl_filename}" ]; then
             mv "${trurl_filename}" trurl;
-            XZ_OPT=-9 tar -Jcf "${file}-${CURL_VERSION}.tar.xz" curl trurl && rm -f curl trurl;
+            sha256sum trurl >> SHA256SUMS;
+            XZ_OPT=-9 tar -Jcf "${file}-${RELEASE_TAG}.tar.xz" curl trurl SHA256SUMS && rm -f curl trurl;
         else
-            XZ_OPT=-9 tar -Jcf "${file}-${CURL_VERSION}.tar.xz" curl && rm -f curl
+            XZ_OPT=-9 tar -Jcf "${file}-${RELEASE_TAG}.tar.xz" curl SHA256SUMS && rm -f curl;
         fi
     done
 
     for file in curl-*.exe; do
+        [ -f "${file}" ] || continue;
         mv "${file}" curl.exe;
-        filename="${file%.exe}"
+        sha256sum curl.exe > SHA256SUMS;
+        filename="${file%.exe}";
 
         trurl_filename=$(echo "${file}" | sed 's#curl-#trurl-#g')
         if [ -f "${trurl_filename}" ]; then
             mv "${trurl_filename}" trurl.exe;
-            XZ_OPT=-9 tar -Jcf "${filename}-${CURL_VERSION}.tar.xz" curl.exe trurl.exe curl-ca-bundle.crt && rm -f curl.exe trurl.exe;
+            sha256sum trurl.exe >> SHA256SUMS;
+            XZ_OPT=-9 tar -Jcf "${filename}-${RELEASE_TAG}.tar.xz" curl.exe trurl.exe curl-ca-bundle.crt SHA256SUMS && rm -f curl.exe trurl.exe;
         else
-            XZ_OPT=-9 tar -Jcf "${filename}-${CURL_VERSION}.tar.xz" curl.exe curl-ca-bundle.crt && rm -f curl.exe;
+            XZ_OPT=-9 tar -Jcf "${filename}-${RELEASE_TAG}.tar.xz" curl.exe curl-ca-bundle.crt SHA256SUMS && rm -f curl.exe;
         fi
     done
-    rm -f curl-ca-bundle.crt;
+    rm -f curl-ca-bundle.crt SHA256SUMS;
+}
+
+rename_dev_package() {
+    if [ "${RELEASE_TAG}" = "${CURL_VERSION}" ]; then
+        return;
+    fi
+
+    cd "${RELEASE_DIR}/release" || exit
+    for file in curl*dev*.tar.xz; do
+        [ -f "${file}" ] || continue;
+        new_file=$(echo "${file}" | sed "s#${CURL_VERSION}#${RELEASE_TAG}#g");
+        mv "${file}" "${new_file}";
+    done
 }
 
 init_env;
 create_release_note;
 tar_curl;
+rename_dev_package;
