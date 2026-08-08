@@ -28,13 +28,18 @@ on:
       # architecture upstream can build. Never leave one of these empty to mean "all": an empty
       # value reaches the build script as an empty ARCHES, which then falls back to `uname -m`
       # and silently builds the runner's architecture alone. Use 'none' to skip a platform.
+      #
+      # The Linux dev package with the headers and the static libraries comes only from this job,
+      # because STATIC_LIBRARY=1 is set here and nowhere else. Skipping it leaves you the binary
+      # only. It has to be the glibc job rather than the musl one: those archives are linked into
+      # a glibc shared library, so musl-built objects would carry musl's struct layouts and inline
+      # definitions while every libc call resolved against glibc at link time.
       ARCHES_LINUX_GLIBC:
         description: "Linux glibc Architecture List (set 'none' to skip)"
         required: false
-        default: 'none'
+        default: 'x86_64'
         type: string
-      # The Linux dev package with the headers and libcurl.a comes only from this job, because
-      # STATIC_LIBRARY=1 is set here and nowhere else. Skipping it leaves you the binary only.
+      # Produces the standalone statically linked curl binary, not the dev package.
       ARCHES_LINUX_MUSL:
         description: "Linux musl Architecture List (set 'none' to skip)"
         required: false
@@ -88,6 +93,7 @@ jobs:
           echo "ENABLE_TRURL=${{ vars.ENABLE_TRURL_GLIBC }}" >> $GITHUB_ENV
           echo "TRURL_VERSION=${{ vars.TRURL_VERSION }}" >> $GITHUB_ENV
           echo "LIBC=glibc" >> $GITHUB_ENV
+          echo "STATIC_LIBRARY=1" >> $GITHUB_ENV
           echo "QBT_MUSL_CROSS_MAKE_VERSION=${{ vars.QBT_MUSL_CROSS_MAKE_VERSION }}" >> $GITHUB_ENV
           echo "CONTAINER_IMAGE=debian:latest" >> $GITHUB_ENV
           echo "TOKEN_READ=${{ secrets.GITHUB_TOKEN }}" >> $GITHUB_ENV
@@ -149,7 +155,6 @@ jobs:
           echo "TRURL_VERSION=${{ vars.TRURL_VERSION }}" >> $GITHUB_ENV
           echo "LIBC=musl" >> $GITHUB_ENV
           echo "QBT_MUSL_CROSS_MAKE_VERSION=${{ vars.QBT_MUSL_CROSS_MAKE_VERSION }}" >> $GITHUB_ENV
-          echo "STATIC_LIBRARY=1" >> $GITHUB_ENV
           echo "CONTAINER_IMAGE=debian:latest" >> $GITHUB_ENV
           echo "TOKEN_READ=${{ secrets.GITHUB_TOKEN }}" >> $GITHUB_ENV
 

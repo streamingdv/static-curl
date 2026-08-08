@@ -291,6 +291,22 @@ arch_variants() {
             export CC="clang-${CLANG_VERSION}" CXX="clang++-${CLANG_VERSION}"
         fi
     fi
+
+    # Build every dependency position independent. The dev package archives get
+    # linked into shared libraries downstream, and a non-PIC object that reads an
+    # external data symbol such as stderr cannot be relocated in a .so at all:
+    # ld fails with "relocation R_X86_64_PC32 ... can not be used when making a
+    # shared object". Because the dependencies are configured --enable-shared=no,
+    # libtool otherwise compiles the non-PIC variant only. OpenSSL passes -fPIC on
+    # its own; this covers the rest, including the CMake builds, which seed their
+    # flags from the environment.
+    #
+    # Set last so it applies to the native build too, which reaches this point
+    # without having gone through either install_cross_compile function. Autoconf
+    # only supplies a default -g -O2 while CFLAGS is unset, so now that we put
+    # something in it we have to carry an optimisation level ourselves.
+    export CFLAGS="${CFLAGS:-} -O3 -fPIC" \
+           CXXFLAGS="${CXXFLAGS:-} -O3 -fPIC"
 }
 
 _get_github() {
