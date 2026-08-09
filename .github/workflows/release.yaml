@@ -95,7 +95,13 @@ jobs:
           echo "LIBC=glibc" >> $GITHUB_ENV
           echo "STATIC_LIBRARY=1" >> $GITHUB_ENV
           echo "QBT_MUSL_CROSS_MAKE_VERSION=${{ vars.QBT_MUSL_CROSS_MAKE_VERSION }}" >> $GITHUB_ENV
-          echo "CONTAINER_IMAGE=debian:latest" >> $GITHUB_ENV
+          # glibc 2.31, which is the oldest release the dev package has to run on.
+          # The container's glibc headers set the floor for the whole bundle, and a
+          # newer one silently raises it: from 2.38 on, the headers rewrite strtol
+          # and strtoul into __isoc23_strtol and __isoc23_strtoul, symbols that do
+          # not exist in older releases. Nothing catches that at link time, because
+          # a shared library is allowed to leave symbols undefined for the loader.
+          echo "CONTAINER_IMAGE=ubuntu:20.04" >> $GITHUB_ENV
           echo "TOKEN_READ=${{ secrets.GITHUB_TOKEN }}" >> $GITHUB_ENV
 
       - name: Cross Build Static cURL
