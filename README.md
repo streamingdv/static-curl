@@ -15,7 +15,6 @@ Simply execute it to compile the most recent version.
 - [brotli](https://github.com/google/brotli)
 - [zstd](https://github.com/facebook/zstd)
 - [zlib](https://zlib.net)
-- [c-ares](https://c-ares.haxx.se)
 - [libpsl](https://rockdaboot.github.io/libpsl/)
 - [trurl](https://curl.se/trurl/)
 
@@ -105,7 +104,6 @@ supported architectures
       -e NGHTTP2_VERSION="" \
       -e ZLIB_VERSION="" \
       -e LIBPSL_VERSION="" \
-      -e ARES_VERSION="" \
       -e ENABLE_TRURL="true" \
       -e TRURL_VERSION="" \
       debian:latest sh curl-static-cross.sh
@@ -128,7 +126,6 @@ ARCHES="x86_64 arm64" \
     ZSTD_VERSION="" \
     LIBSSH2_VERSION="" \
     LIBPSL_VERSION="" \
-    ARES_VERSION="" \
     bash curl-static-mac.sh
 ```
 
@@ -151,7 +148,6 @@ ARCHES="x86_64 arm64" \
       -e NGHTTP2_VERSION="" \
       -e ZLIB_VERSION="" \
       -e LIBPSL_VERSION="" \
-      -e ARES_VERSION="" \
       -e ENABLE_TRURL="true" \
       -e TRURL_VERSION="" \
       mstorsjo/llvm-mingw:latest sh curl-static-win.sh
@@ -177,7 +173,6 @@ For all `VERSION` variables, leaving them blank will automatically fetch the lat
 - `BROTLI_VERSION`: The version of brotli.
 - `ZSTD_VERSION`: The version of zstd.
 - `LIBPSL_VERSION`: The version of libpsl.
-- `ARES_VERSION`: The version of c-ares.
 - `TRURL_VERSION`: The version of trurl.
 - `ENABLE_TRURL`: Compile trurl. The default value is `false`, set it to `true` to enable. NOT available for macOS.
 - `ENABLE_DEBUG`: Enable curl debugging. The default value is `false`, set it to `true` to enable. This setting appends `--enable-debug` to the curl compilation options.

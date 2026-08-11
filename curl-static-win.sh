@@ -59,7 +59,6 @@ init_env() {
     echo "brotli version: ${BROTLI_VERSION}"
     echo "zstd version: ${ZSTD_VERSION}"
     echo "libssh2 version: ${LIBSSH2_VERSION}"
-    echo "c-ares version: ${ARES_VERSION}"
     echo "trurl version: ${TRURL_VERSION}"
 
     . /etc/os-release;  # get the ID variable
@@ -223,8 +222,6 @@ _github_tag_candidates() {
     case "${repo}" in
         curl/curl)
             printf "curl-%s\n" "${underscored_version}" ;;
-        c-ares/c-ares)
-            printf "cares-%s\n" "${underscored_version}" ;;
         openssl/openssl)
             printf "openssl-%s\n" "${bare_version}"
             printf "OpenSSL_%s\n" "${underscored_version}" ;;
@@ -555,22 +552,6 @@ compile_libpsl() {
     _copy_license LICENSE libpsl;
 }
 
-compile_ares() {
-    echo "Compiling c-ares, Arch: ${ARCH}" | tee "${RELEASE_DIR}/running"
-    local url
-    change_dir;
-
-    url_from_github c-ares/c-ares "${ARES_VERSION}"
-    url="${URL}"
-    download_and_extract "${url}"
-
-    ./configure --host="${TARGET}" --prefix="${PREFIX}" --enable-static --disable-shared;
-    make -j "$(nproc)";
-    make install;
-
-    _copy_license LICENSE.md c-ares;
-}
-
 compile_tls() {
     echo "Compiling ${TLS_LIB}, Arch: ${ARCH}" | tee "${RELEASE_DIR}/running"
     local url openssl_arch ec_nistp_64_gcc_128 ssl3
@@ -819,7 +800,7 @@ curl_config() {
         autoreconf -fi;
     fi
 
-    CPPFLAGS="-DCURL_STATICLIB -DCARES_STATICLIB -DHAS_ALPN ${CPPFLAGS}"
+    CPPFLAGS="-DCURL_STATICLIB -DHAS_ALPN ${CPPFLAGS}"
     CPPFLAGS="-DNGHTTP2_STATICLIB -DNGHTTP3_STATICLIB -DNGTCP2_STATICLIB ${CPPFLAGS}"
 
     ./configure \
@@ -847,7 +828,7 @@ curl_config() {
         --enable-get-easy-options --enable-progress-meter \
         --enable-sspi --enable-windows-unicode \
         --enable-ca-native --without-ca-bundle --without-ca-path \
-        --without-ca-fallback --enable-ares --enable-httpsrr --enable-ipfs \
+        --without-ca-fallback --enable-httpsrr --enable-ipfs \
         --disable-ldap --disable-ldaps --enable-ssls-export \
         "${ENABLE_DEBUG}";
 }
@@ -994,7 +975,6 @@ compile() {
     compile_zlib;
     compile_zstd;
     compile_libpsl;
-    compile_ares;
     compile_libssh2;
     compile_nghttp3;
     compile_ngtcp2;

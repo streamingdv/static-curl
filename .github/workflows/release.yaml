@@ -89,7 +89,6 @@ jobs:
           echo "BROTLI_VERSION=${{ vars.BROTLI_VERSION }}" >> $GITHUB_ENV
           echo "ZSTD_VERSION=${{ vars.ZSTD_VERSION }}" >> $GITHUB_ENV
           echo "LIBSSH2_VERSION=${{ vars.LIBSSH2_VERSION }}" >> $GITHUB_ENV
-          echo "ARES_VERSION=${{ vars.ARES_VERSION }}" >> $GITHUB_ENV
           echo "ENABLE_TRURL=${{ vars.ENABLE_TRURL_GLIBC }}" >> $GITHUB_ENV
           echo "TRURL_VERSION=${{ vars.TRURL_VERSION }}" >> $GITHUB_ENV
           echo "LIBC=glibc" >> $GITHUB_ENV
@@ -156,7 +155,6 @@ jobs:
           echo "BROTLI_VERSION=${{ vars.BROTLI_VERSION }}" >> $GITHUB_ENV
           echo "ZSTD_VERSION=${{ vars.ZSTD_VERSION }}" >> $GITHUB_ENV
           echo "LIBSSH2_VERSION=${{ vars.LIBSSH2_VERSION }}" >> $GITHUB_ENV
-          echo "ARES_VERSION=${{ vars.ARES_VERSION }}" >> $GITHUB_ENV
           echo "ENABLE_TRURL=${{ vars.ENABLE_TRURL_MUSL }}" >> $GITHUB_ENV
           echo "TRURL_VERSION=${{ vars.TRURL_VERSION }}" >> $GITHUB_ENV
           echo "LIBC=musl" >> $GITHUB_ENV
@@ -216,7 +214,6 @@ jobs:
           echo "BROTLI_VERSION=${{ vars.BROTLI_VERSION }}" >> $GITHUB_ENV
           echo "ZSTD_VERSION=${{ vars.ZSTD_VERSION }}" >> $GITHUB_ENV
           echo "LIBSSH2_VERSION=${{ vars.LIBSSH2_VERSION }}" >> $GITHUB_ENV
-          echo "ARES_VERSION=${{ vars.ARES_VERSION }}" >> $GITHUB_ENV
           echo "ENABLE_TRURL=${{ vars.ENABLE_TRURL_WINDOWS }}" >> $GITHUB_ENV
           echo "TRURL_VERSION=${{ vars.TRURL_VERSION }}" >> $GITHUB_ENV
           echo "CONTAINER_IMAGE=mstorsjo/llvm-mingw:latest" >> $GITHUB_ENV
@@ -278,7 +275,6 @@ jobs:
           echo "BROTLI_VERSION=${{ vars.BROTLI_VERSION }}" >> $GITHUB_ENV
           echo "ZSTD_VERSION=${{ vars.ZSTD_VERSION }}" >> $GITHUB_ENV
           echo "LIBSSH2_VERSION=${{ vars.LIBSSH2_VERSION }}" >> $GITHUB_ENV
-          echo "ARES_VERSION=${{ vars.ARES_VERSION }}" >> $GITHUB_ENV
           echo "ENABLE_TRURL=${{ vars.ENABLE_TRURL_MACOS }}" >> $GITHUB_ENV
           echo "TRURL_VERSION=${{ vars.TRURL_VERSION }}" >> $GITHUB_ENV
           echo "TOKEN_READ=${{ secrets.GITHUB_TOKEN }}" >> $GITHUB_ENV
