@@ -623,6 +623,7 @@ compile_tls() {
         CC=clang CXX=clang++ \
         -fPIC \
         --prefix="${PREFIX}" \
+        --libdir=lib \
         threads no-shared \
         enable-ktls \
         ${ec_nistp_64_gcc_128} \

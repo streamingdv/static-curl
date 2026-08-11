@@ -534,6 +534,7 @@ compile_tls() {
         ${OPENSSL_ARCH} \
         -fPIC \
         --prefix="${PREFIX}" \
+        --libdir=lib \
         --openssldir=/etc/ssl \
         threads no-shared \
         enable-ktls \
